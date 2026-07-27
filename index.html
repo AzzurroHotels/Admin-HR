@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CBIT</title>
+  <link rel="icon" type="image/png" href="cbit-logo.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <section class="login">
+    <div class="login-card">
+      <div class="logo"><img src="cbit-logo.png" alt="CBIT logo"></div>
+      <h1>CBIT</h1>
+      <p class="muted">Sign in to access the CBIT workspace.</p>
+      <form id="loginForm">
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary" style="width:100%" type="submit">Sign In</button>
+        <a class="btn public-roster-link" href="published-roster.html">View Published Roster</a>
+        <p id="msg" class="login-msg" role="alert"></p>
+      </form>
+    </div>
+  </section>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.8"></script><script src="config.js"></script><script src="database.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    const form = document.getElementById('loginForm');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
+    const message = document.getElementById('msg');
+
+    Auth.init(false);
+
+    form.addEventListener('submit', async event => {
+      event.preventDefault();
+      message.textContent = '';
+      const button = form.querySelector('button[type="submit"]');
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Signing in…';
+      try {
+        await Auth.login(email.value, password.value);
+      } catch (error) {
+        message.textContent = error.message || 'Unable to sign in.';
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    });
+  </script>
+</body>
+</html>
