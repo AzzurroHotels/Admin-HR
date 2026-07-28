@@ -1,50 +1,69 @@
-const RECEPTION_KPI_CRITERIA = [
-  ['Professional Presentation and Communication',10,'Proper attire and grooming','Minor',1],
-  ['Professional Presentation and Communication',10,'Attentive to reception livestream','Standard',2],
-  ['Professional Presentation and Communication',10,'Every guest greeted professionally','Standard',2],
-  ['Professional Presentation and Communication',10,'Internal requests answered completely and on time','Minor',1],
-  ['Professional Presentation and Communication',10,'Important communication documented','Standard',2],
-  ['Check-in Speed and Accuracy',10,'Complete-document check-in within 5 minutes','Standard',2],
-  ['Check-in Speed and Accuracy',10,'Incomplete-document check-in within 7 minutes','Standard',2],
-  ['Check-in Speed and Accuracy',10,'Check-in information accurate and delays documented','Standard',2],
-  ['Dashboard Management',10,'Dashboard updated during the shift','Standard',2],
-  ['Dashboard Management',10,'No duplicate or missing critical records','Standard',2],
-  ['Dashboard Management',10,'Announcements checked and followed','Minor',1],
-  ['Complaint Handling and Ownership',15,'Complaint managed by one clearly identified owner','Major',5],
-  ['Complaint Handling and Ownership',15,'Reasonable recovery options exhausted before escalation','Major',5],
-  ['Complaint Handling and Ownership',15,'Previous guest incidents checked before escalation','Major',5],
-  ['Complaint Handling and Ownership',15,'Decision-ready escalation report complete','Major',5],
-  ['Complaint Handling and Ownership',15,'No unauthorised voucher, upgrade or refund promise','Critical',10],
-  ['De-escalation and Problem-Solving',15,'Calm, respectful and non-confrontational communication','Major',5],
-  ['De-escalation and Problem-Solving',15,'One complaint handled at a time with clear next steps','Standard',2],
-  ['De-escalation and Problem-Solving',15,'Safety risks prioritised and escalated immediately','Critical',10],
-  ['De-escalation and Problem-Solving',15,'Follow-up completed until resolution or acknowledged handover','Major',5],
-  ['Guest Reviews and Satisfaction',15,'Guest satisfaction check completed','Minor',1],
-  ['Guest Reviews and Satisfaction',15,'Satisfied guest invited to leave an honest review','Minor',1],
-  ['Guest Reviews and Satisfaction',15,'Negative feedback documented and actioned','Standard',2],
-  ['Cleaning Monitoring',15,'Cleaner arrival and supplies checked','Standard',2],
-  ['Cleaning Monitoring',15,'Required room, bathroom and fridge evidence received','Major',5],
-  ['Cleaning Monitoring',15,'Cleaning evidence scrutinised and corrections requested','Major',5],
-  ['Cleaning Monitoring',15,'Cleaner called after 15 minutes without a response','Standard',2],
-  ['Maintenance Management',10,'Maintenance issue logged completely and without duplication','Standard',2],
-  ['Maintenance Management',10,'Issue followed up with responsible person and completion time','Major',5],
-  ['Maintenance Management',10,'Completion verified before closure','Major',5],
-  ['Maintenance Management',10,'Urgent maintenance reported immediately','Critical',10]
-].map((r,i)=>({key:`criterion_${i+1}`,category:r[0],weight:r[1],label:r[2],severity:r[3],deduction:r[4]}));
+const RECEPTION_SEVERITY_DEDUCTIONS = { Minor: 5, Standard: 10, Major: 25, Critical: 50 };
 
-function receptionRating(score){
-  if(score>=95)return 'Excellent';
-  if(score>=85)return 'Good';
-  if(score>=75)return 'Needs Improvement';
-  if(score>=65)return 'Unsatisfactory';
-  return 'Critical';
+const RECEPTION_KPI_CRITERIA = [
+  ['Professional Presentation and Communication',10,'Proper attire and grooming','Minor'],
+  ['Professional Presentation and Communication',10,'Attentive to reception livestream','Standard'],
+  ['Professional Presentation and Communication',10,'Every guest greeted professionally','Standard'],
+  ['Professional Presentation and Communication',10,'Internal requests answered completely and on time','Minor'],
+  ['Professional Presentation and Communication',10,'Important communication documented','Standard'],
+  ['Check-in Speed and Accuracy',10,'Complete-document check-in within 5 minutes','Standard'],
+  ['Check-in Speed and Accuracy',10,'Incomplete-document check-in within 7 minutes','Standard'],
+  ['Check-in Speed and Accuracy',10,'Check-in information accurate and delays documented','Standard'],
+  ['Dashboard Management',10,'Dashboard updated during the shift','Standard'],
+  ['Dashboard Management',10,'No duplicate or missing critical records','Standard'],
+  ['Dashboard Management',10,'Announcements checked and followed','Minor'],
+  ['Complaint Handling and Ownership',15,'Complaint managed by one clearly identified owner','Major'],
+  ['Complaint Handling and Ownership',15,'Reasonable recovery options exhausted before escalation','Major'],
+  ['Complaint Handling and Ownership',15,'Previous guest incidents checked before escalation','Major'],
+  ['Complaint Handling and Ownership',15,'Decision-ready escalation report complete','Major'],
+  ['Complaint Handling and Ownership',15,'No unauthorised voucher, upgrade or refund promise','Critical'],
+  ['De-escalation and Problem-Solving',15,'Calm, respectful and non-confrontational communication','Major'],
+  ['De-escalation and Problem-Solving',15,'One complaint handled at a time with clear next steps','Standard'],
+  ['De-escalation and Problem-Solving',15,'Safety risks prioritised and escalated immediately','Critical'],
+  ['De-escalation and Problem-Solving',15,'Follow-up completed until resolution or acknowledged handover','Major'],
+  ['Guest Reviews and Satisfaction',15,'Guest satisfaction check completed','Minor'],
+  ['Guest Reviews and Satisfaction',15,'Satisfied guest invited to leave an honest review','Minor'],
+  ['Guest Reviews and Satisfaction',15,'Negative feedback documented and actioned','Standard'],
+  ['Cleaning Monitoring',15,'Cleaner arrival and supplies checked','Standard'],
+  ['Cleaning Monitoring',15,'Required room, bathroom and fridge evidence received','Major'],
+  ['Cleaning Monitoring',15,'Cleaning evidence scrutinised and corrections requested','Major'],
+  ['Cleaning Monitoring',15,'Cleaner called after 15 minutes without a response','Standard'],
+  ['Maintenance Management',10,'Maintenance issue logged completely and without duplication','Standard'],
+  ['Maintenance Management',10,'Issue followed up with responsible person and completion time','Major'],
+  ['Maintenance Management',10,'Completion verified before closure','Major'],
+  ['Maintenance Management',10,'Urgent maintenance reported immediately','Critical']
+].map((r,i)=>({key:`criterion_${i+1}`,category:r[0],weight:r[1],label:r[2],severity:r[3],deduction:RECEPTION_SEVERITY_DEDUCTIONS[r[3]]}));
+
+function ratingFromScore(score){
+  if(score>=98)return 'Excellent';
+  if(score>=95)return 'Very Good';
+  if(score>=90)return 'Satisfactory';
+  if(score>=80)return 'Needs Improvement';
+  if(score>=70)return 'Unsatisfactory';
+  return 'Critical Performance';
 }
-function calculateReceptionEvaluation(faults){
+function strictScoreCap(faults=[]){
+  const counts={Minor:0,Standard:0,Major:0,Critical:0};
+  faults.forEach(f=>{if(counts[f.severity]!==undefined)counts[f.severity]+=Number(f.fault_count||0)});
+  if(counts.Critical>=1)return 69;
+  if(counts.Major>=1)return 79;
+  if(counts.Standard>=2||counts.Minor>=3)return 89;
+  if(counts.Standard>=1)return 94;
+  if(counts.Minor>=2)return 94;
+  if(counts.Minor>=1)return 97;
+  return 100;
+}
+function receptionRating(score,faults=[]){return ratingFromScore(Math.min(Number(score||0),strictScoreCap(faults)))}
+function calculateReceptionEvaluation(faults,acknowledgementStatus='Pending'){
   const weights={};RECEPTION_KPI_CRITERIA.forEach(c=>weights[c.category]=c.weight);
   const deductions={};faults.forEach(f=>deductions[f.category]=(deductions[f.category]||0)+Number(f.total_deduction||0));
-  const categoryScores={};let score=0;
-  Object.entries(weights).forEach(([category,weight])=>{categoryScores[category]=Math.max(0,weight-(deductions[category]||0));score+=categoryScores[category]});
-  return {score:Math.max(0,score),totalDeduction:Math.max(0,100-score),categoryScores};
+  const categoryScores={};Object.entries(weights).forEach(([category,weight])=>{categoryScores[category]=Math.max(0,weight-(deductions[category]||0))});
+  const acknowledgementDeduction=acknowledgementStatus==='Declined to acknowledge'?10:0;
+  const rawDeduction=faults.reduce((sum,f)=>sum+Number(f.total_deduction||0),0)+acknowledgementDeduction;
+  const rawScore=Math.max(0,100-rawDeduction);
+  const cap=strictScoreCap(faults);
+  const score=Math.min(rawScore,cap);
+  return {score,totalDeduction:Math.max(0,100-score),rawDeduction,acknowledgementDeduction,categoryScores,scoreCap:cap};
 }
 function localToday(){const d=new Date();return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10)}
 function wordDownload(html,name){const blob=new Blob(['\ufeff',html],{type:'application/msword;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name+'.doc';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
@@ -76,7 +95,7 @@ async function renderStaffPage(cfg){
   <div class="field"><label>Description</label><textarea id="noteText" placeholder="Record what happened on the specific date..."></textarea></div><button class="btn" type="button" id="addNote">Add Record</button><div id="notes" style="margin-top:14px"></div></div><div class="modal-foot"><button type="button" class="btn btn-danger" id="deleteStaff">Delete Employee</button><button class="btn btn-primary" type="submit">Save Details</button></div></form></div></div>`);
 
   if(cfg.enableEvaluations||isUnified){
-    document.body.insertAdjacentHTML('beforeend',`<div id="evaluationModal" class="modal hidden"><div class="modal-card wide"><div class="modal-head"><h3 id="evaluationTitle">Daily Reception Evaluation</h3><button class="btn" data-close="evaluationModal">×</button></div><form id="evaluationForm"><div class="modal-body"><input id="evaluationId" type="hidden"><div class="grid2"><div class="field"><label>Evaluation Date</label><input id="evaluationDate" type="date" required></div><div class="field"><label>Evaluator Name</label><input id="evaluatorName" required></div></div><div class="score-summary"><div><strong>Fault-point grading</strong><p class="muted">Enter the number of faults observed. Minor −1, Standard −2, Major −5, Critical −10.</p></div><div class="score-circle" id="liveScore">100</div><div><strong id="liveRating">Excellent</strong><div class="muted" id="liveDeduction">0 points deducted</div></div></div><div class="table-wrap"><table class="eval-table"><thead><tr><th>KPI Category / Criterion</th><th>Severity</th><th>Deduction</th><th>Faults</th><th>Total</th><th>Observation / Evidence</th></tr></thead><tbody id="criteriaBody"></tbody></table></div><h3>Coaching Record</h3><div class="field"><label>Positive Observations</label><textarea id="evalPositive"></textarea></div><div class="field"><label>Coaching Discussion / Performance Concerns</label><textarea id="evalCoaching"></textarea></div><div class="field"><label>Agreed Actions</label><textarea id="evalActions"></textarea></div><div class="grid2"><div class="field"><label>Follow-up Date</label><input id="evalFollowup" type="date"></div><div class="field"><label>Acknowledgement Status</label><select id="evalAcknowledgement"><option>Pending</option><option>Acknowledged</option><option>Declined to acknowledge</option></select></div></div><div class="field"><label>Receptionist Comments</label><textarea id="evalComments"></textarea></div></div><div class="modal-foot"><button class="btn" type="button" data-close="evaluationModal">Cancel</button><button class="btn btn-primary">Save Evaluation</button></div></form></div></div>`);
+    document.body.insertAdjacentHTML('beforeend',`<div id="evaluationModal" class="modal hidden"><div class="modal-card wide"><div class="modal-head"><h3 id="evaluationTitle">Daily Reception Evaluation</h3><button class="btn" data-close="evaluationModal">×</button></div><form id="evaluationForm"><div class="modal-body"><input id="evaluationId" type="hidden"><div class="grid2"><div class="field"><label>Evaluation Date</label><input id="evaluationDate" type="date" required></div><div class="field"><label>Evaluator Name</label><input id="evaluatorName" required></div></div><div class="score-summary"><div><strong>Fault-point grading</strong><p class="muted">Every recorded fault has a significant impact. Minor −5, Standard −10, Major −25, Critical −50. Repeated faults within 30 days are doubled.</p></div><div class="score-circle" id="liveScore">100</div><div><strong id="liveRating">Excellent</strong><div class="muted" id="liveDeduction">0 points deducted</div></div></div><div class="table-wrap"><table class="eval-table"><thead><tr><th>KPI Category / Criterion</th><th>Severity</th><th>Deduction</th><th>Faults</th><th>Total</th><th>Observation / Evidence</th></tr></thead><tbody id="criteriaBody"></tbody></table></div><h3>Coaching Record</h3><div class="field"><label>Positive Observations</label><textarea id="evalPositive"></textarea></div><div class="field"><label>Coaching Discussion / Performance Concerns</label><textarea id="evalCoaching"></textarea></div><div class="field"><label>Agreed Actions</label><textarea id="evalActions"></textarea></div><div class="grid2"><div class="field"><label>Follow-up Date</label><input id="evalFollowup" type="date"></div><div class="field"><label>Acknowledgement Status</label><select id="evalAcknowledgement"><option>Pending</option><option>Acknowledged</option><option>Declined to acknowledge</option></select></div></div><div class="field"><label>Receptionist Comments</label><textarea id="evalComments"></textarea></div></div><div class="modal-foot"><button class="btn" type="button" data-close="evaluationModal">Cancel</button><button class="btn btn-primary">Save Evaluation</button></div></form></div></div>`);
   }
 
   // Use explicit element references instead of relying on browser-created globals for element IDs.
@@ -201,8 +220,14 @@ async function renderStaffPage(cfg){
   let criterionAttachments = {};
   let newlyUploadedEvidence = new Set();
   let pendingEvidenceDeletes = new Set();
-  function currentFaults(){return RECEPTION_KPI_CRITERIA.map(c=>{const count=Math.max(0,Number(qs(`[data-fault-count="${c.key}"]`)?.value||0));const note=qs(`[data-fault-note="${c.key}"]`)?.value.trim()||'';const attachments=criterionAttachments[c.key]||[];return {...c,fault_count:count,notes:note,attachments,total_deduction:count*c.deduction}}).filter(f=>f.fault_count||f.notes||(f.attachments&&f.attachments.length))}
-  function updateScore(){const result=calculateReceptionEvaluation(currentFaults());liveScore.textContent=result.score.toFixed(result.score%1?1:0);liveRating.textContent=receptionRating(result.score);liveDeduction.textContent=`${result.totalDeduction} points deducted`;RECEPTION_KPI_CRITERIA.forEach(c=>{const el=qs(`[data-fault-total="${c.key}"]`);if(el){const count=Number(qs(`[data-fault-count="${c.key}"]`)?.value||0);el.textContent=count*c.deduction}})}
+  function isRepeatedFault(key){
+    if(!active||!evaluationDate?.value)return false;
+    const currentDate=new Date(evaluationDate.value+'T00:00:00');
+    const cutoff=new Date(currentDate);cutoff.setDate(cutoff.getDate()-30);
+    return evaluations.some(ev=>String(ev.staff_member_id)===String(active.id)&&String(ev.id)!==String(evaluationId.value||'')&&new Date(ev.evaluation_date+'T00:00:00')>=cutoff&&new Date(ev.evaluation_date+'T00:00:00')<=currentDate&&(ev.faults||[]).some(f=>f.key===key&&Number(f.fault_count||0)>0));
+  }
+  function currentFaults(){return RECEPTION_KPI_CRITERIA.map(c=>{const count=Math.max(0,Number(qs(`[data-fault-count="${c.key}"]`)?.value||0));const note=qs(`[data-fault-note="${c.key}"]`)?.value.trim()||'';const attachments=criterionAttachments[c.key]||[];const repeated=count>0&&isRepeatedFault(c.key);const multiplier=repeated?2:1;return {...c,fault_count:count,notes:note,attachments,repeated,multiplier,total_deduction:count*c.deduction*multiplier}}).filter(f=>f.fault_count||f.notes||(f.attachments&&f.attachments.length))}
+  function updateScore(){const faults=currentFaults();const result=calculateReceptionEvaluation(faults,evalAcknowledgement?.value);liveScore.textContent=result.score.toFixed(result.score%1?1:0);liveRating.textContent=receptionRating(result.score,faults);liveDeduction.textContent=`${result.totalDeduction} points deducted${result.acknowledgementDeduction?' (includes 10 for declined acknowledgement)':''}`;RECEPTION_KPI_CRITERIA.forEach(c=>{const el=qs(`[data-fault-total="${c.key}"]`);if(el){const fault=faults.find(f=>f.key===c.key);el.textContent=fault?`${fault.total_deduction}${fault.repeated?' (repeated ×2)':''}`:'0'}})}
   function formatFileSize(bytes){const n=Number(bytes||0);if(n<1024)return `${n} B`;if(n<1048576)return `${(n/1024).toFixed(1)} KB`;return `${(n/1048576).toFixed(1)} MB`}
   function renderEvidenceList(key){
     const box=qs(`[data-evidence-list="${key}"]`);
@@ -261,7 +286,7 @@ async function renderStaffPage(cfg){
     }catch(error){Shared.toast(error.message||'Could not attach evidence.');}
   }
   function renderCriteria(existing=[]){criterionAttachments={};const map=Object.fromEntries((existing||[]).map(f=>[f.key,f]));let last='';criteriaBody.innerHTML=RECEPTION_KPI_CRITERIA.map(c=>{const f=map[c.key]||{};criterionAttachments[c.key]=Array.isArray(f.attachments)?[...f.attachments]:[];const header=c.category!==last?`<tr><td colspan="6" class="category-row">${Shared.esc(c.category)} <span class="muted">(${c.weight}% maximum)</span></td></tr>`:'';last=c.category;return `${header}<tr><td>${Shared.esc(c.label)}</td><td><span class="severity ${c.severity.toLowerCase()}">${c.severity}</span></td><td>${c.deduction}</td><td><input class="fault-input" type="number" min="0" step="1" value="${Number(f.fault_count||0)}" data-fault-count="${c.key}"></td><td><strong data-fault-total="${c.key}">${Number(f.total_deduction||0)}</strong></td><td><div class="evidence-editor" data-evidence-drop="${c.key}"><input value="${Shared.esc(f.notes||'')}" data-fault-note="${c.key}" placeholder="Write a note, or paste a picture here"><div class="evidence-dropzone" tabindex="0" data-evidence-zone="${c.key}"><strong>Paste, drag or upload evidence</strong><span>Ctrl+V / Cmd+V, drop pictures or videos here, or choose files</span><label class="btn evidence-upload">Choose Picture / Video<input type="file" accept="image/*,video/*" multiple data-evidence-input="${c.key}"></label></div><div class="evidence-list" data-evidence-list="${c.key}"></div></div></td></tr>`}).join('');
-    qsa('[data-fault-count],[data-fault-note]').forEach(el=>el.oninput=updateScore);
+    qsa('[data-fault-count],[data-fault-note]').forEach(el=>el.oninput=updateScore);evaluationDate.onchange=updateScore;evalAcknowledgement.onchange=updateScore;
     qsa('[data-evidence-input]').forEach(input=>input.onchange=async()=>{const files=[...input.files];input.disabled=true;await attachEvidenceFiles(input.dataset.evidenceInput,files);input.value='';input.disabled=false});
     qsa('[data-evidence-zone]').forEach(zone=>{
       const key=zone.dataset.evidenceZone;
@@ -280,8 +305,8 @@ async function renderStaffPage(cfg){
     if(saveButton){saveButton.disabled=true;saveButton.textContent='Saving…';}
     try{
       const faults=currentFaults();
-      const calc=calculateReceptionEvaluation(faults);
-      const payload={staff_member_id:active.id,evaluation_date:evaluationDate.value,evaluator_name:evaluatorName.value.trim(),total_score:calc.score,total_deduction:calc.totalDeduction,rating:receptionRating(calc.score),faults,positive_observations:evalPositive.value.trim(),coaching_notes:evalCoaching.value.trim(),agreed_actions:evalActions.value.trim(),follow_up_date:evalFollowup.value||null,acknowledgement_status:evalAcknowledgement.value,employee_comments:evalComments.value.trim()};
+      const calc=calculateReceptionEvaluation(faults,evalAcknowledgement.value);
+      const payload={staff_member_id:active.id,evaluation_date:evaluationDate.value,evaluator_name:evaluatorName.value.trim(),total_score:calc.score,total_deduction:calc.totalDeduction,rating:receptionRating(calc.score,faults),faults,positive_observations:evalPositive.value.trim(),coaching_notes:evalCoaching.value.trim(),agreed_actions:evalActions.value.trim(),follow_up_date:evalFollowup.value||null,acknowledgement_status:evalAcknowledgement.value,employee_comments:evalComments.value.trim()};
       if(evaluationId.value){
         await DB.update('receptionist_evaluations',evaluationId.value,payload);
       }else{
@@ -327,7 +352,7 @@ async function renderStaffPage(cfg){
       (fault.attachments||[]).forEach(file=>row.evidence.push(`${item.evaluator_name||item.evaluator_email||'Evaluator'} attachment: ${file.name||'Evidence file'}`));
     }));
     const faultRows=grouped.size?[...grouped.values()].map(row=>`<tr><td>${Shared.esc(row.category||'')}</td><td>${Shared.esc(row.label||'')}</td><td>${Shared.esc(row.severity||'')}</td><td>${row.fault_count}</td><td>${row.total_deduction}</td><td>${uniqueText(row.evidence).map(Shared.esc).join('<br>')||'-'}</td></tr>`).join(''):'<tr><td colspan="6">No faults were recorded by any evaluator.</td></tr>';
-    const evaluatorRows=list.map(item=>`<tr><td>${Shared.esc(item.evaluator_name||item.evaluator_email||'-')}</td><td>${Shared.esc(item.evaluator_email||'-')}</td><td>${Number(item.total_score||0).toFixed(1)}%</td><td>${Shared.esc(item.rating||receptionRating(Number(item.total_score||0)))}</td><td>${Number(item.total_deduction||0).toFixed(1)}</td><td>${Shared.esc(item.acknowledgement_status||'Pending')}</td></tr>`).join('');
+    const evaluatorRows=list.map(item=>`<tr><td>${Shared.esc(item.evaluator_name||item.evaluator_email||'-')}</td><td>${Shared.esc(item.evaluator_email||'-')}</td><td>${Number(item.total_score||0).toFixed(1)}%</td><td>${Shared.esc(item.rating||receptionRating(Number(item.total_score||0),item.faults||[]))}</td><td>${Number(item.total_deduction||0).toFixed(1)}</td><td>${Shared.esc(item.acknowledgement_status||'Pending')}</td></tr>`).join('');
     const makeList=values=>uniqueText(values).map(value=>`<li>${Shared.esc(value)}</li>`).join('')||'<li>None recorded.</li>';
     const html=`<html><head><style>body{font-family:Arial;color:#17324d;font-size:10.5pt}h1{color:#102d4f}table{width:100%;border-collapse:collapse;margin:8px 0 16px}th,td{border:1px solid #ccd8e3;padding:7px;vertical-align:top}th{background:#eaf3f8;text-align:left}.score{padding:12px;border:2px solid #4f7d91;background:#f4f8f9;font-size:16pt;font-weight:bold}</style></head><body><h1>Consolidated Daily Receptionist Evaluation</h1><p><b>Receptionist:</b> ${Shared.esc(active.full_name)}</p><p><b>Evaluation date:</b> ${Shared.fmtDate(date)}</p><p><b>Number of evaluator submissions:</b> ${list.length}</p><div class="score">Consolidated Score: ${average.toFixed(1)}% — ${Shared.esc(receptionRating(average))}</div><h2>Evaluator Results</h2><table><tr><th>Evaluator</th><th>Email</th><th>Score</th><th>Rating</th><th>Deduction</th><th>Acknowledgement</th></tr>${evaluatorRows}</table><h2>Consolidated Faults, Observations and Evidence</h2><table><tr><th>Category</th><th>Criterion</th><th>Severity</th><th>Total Faults</th><th>Total Deduction</th><th>Combined Evidence</th></tr>${faultRows}</table><h2>Consolidated Coaching Record</h2><p><b>Positive observations</b></p><ul>${makeList(list.map(item=>item.positive_observations))}</ul><p><b>Coaching discussions / concerns</b></p><ul>${makeList(list.map(item=>item.coaching_notes))}</ul><p><b>Agreed actions</b></p><ul>${makeList(list.map(item=>item.agreed_actions))}</ul><p><b>Receptionist comments</b></p><ul>${makeList(list.map(item=>item.employee_comments))}</ul></body></html>`;
     wordDownload(html,`${active.full_name.replace(/[^a-z0-9]+/gi,'_')}_${date}_Consolidated_Daily_Evaluation`)
